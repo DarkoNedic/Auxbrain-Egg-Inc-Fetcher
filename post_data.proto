@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message userdata {
+  required string user_id = 1;
+  optional bool f1 = 2;
+  optional bool f2 = 3;
+}

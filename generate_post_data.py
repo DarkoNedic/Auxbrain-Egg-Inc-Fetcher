@@ -1,0 +1,49 @@
+import post_data_pb2, sys, os
+
+def bin2base64(bin_string):
+    base64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    split = ["00" + bin_string[i:i + 6] for i in range(0, len(bin_string), 6)]
+    # print(split)
+    result = ""
+    for b in split:
+        if len(b) == 6:
+            b += "00"
+            result += base64_alphabet[int(b, 2)]
+            result += "="
+        elif len(b) == 4:
+            b += "0000"
+            result += base64_alphabet[int(b, 2)]
+            result += "=="
+        else:
+            result += base64_alphabet[int(b, 2)]
+    # print(result)
+    return result
+
+def run(DST=os.getcwd() + "/post_data.out", write=False):
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
+        print("Usage: python", sys.argv[0], "<USER_ID>", "(<DESTINATION_FILE>)")
+        sys.exit(-1)
+
+    if len(sys.argv) > 1:
+        USER_ID = sys.argv[1]
+        if len(sys.argv) == 3:
+            DST = sys.argv[2]
+
+    userdata = post_data_pb2.userdata()
+    userdata.user_id = USER_ID
+    userdata.f1 = 0
+    userdata.f2 = 1
+
+    data = userdata.SerializeToString()
+    data = ''.join(bin(x)[2:].zfill(8) for x in list(data))
+    POST_data = bin2base64(data)
+
+    if write:
+        f = open(DST, "w")
+        f.write(POST_data)
+        f.close()
+
+    return POST_data
+
+if __name__ == '__main__':
+    run(write=True)

@@ -1,15 +1,13 @@
 import generate_post_data
 import requests as req
-import base64
+import base64, json, re
 from struct import unpack
-import json, re
 from decimal import Decimal
+from collections import OrderedDict
 
 from google.protobuf.json_format import MessageToJson, MessageToDict
 
 from protobuf_inspector_master.main import run as protobuf_decoder
-
-from collections import OrderedDict
 
 
 eggs = [  # name, value
@@ -33,6 +31,7 @@ eggs = [  # name, value
     ("Universe", 100000000000000),
     ("Enlightenment", 0.000000001)
     ]
+
 boosts_dictionary = {  # name
     "quantum_bulb": "Quantum Warming Bulb",
     "jimbos_blue": "Jimbo's Excellent Bird Feed",
@@ -282,6 +281,72 @@ class Profile():
     def add_farm_population(self, farm_population):
         self.farm_population = self.transform_number(int(farm_population), just_transform=True)
 
+    def add_bonus_per_soul_egg(self):
+        prophecy_bonus = (1.0 + 0.05 + 0.01 * self.epic_research_list['prophecy_bonus'])
+        soul_eggs_bonus = (10 + self.epic_research_list['soul_eggs'])
+        self.bonus_per_soul_egg = prophecy_bonus ** int(self.prophecy_eggs) * soul_eggs_bonus
+
+    def add_earnings_bonus(self):
+        self.earnings_bonus = self.transform_number(self.bonus_per_soul_egg * self.soul_eggs[0], just_transform=True)
+        eb_list = list(self.earnings_bonus)
+        eb_list[1] += "%"
+        self.earnings_bonus = tuple(eb_list)
+
+    def add_internal_hatchery_rate(self):
+        rate = 2 * self.research_list['internal_hatchery1']
+        rate += 5 * self.research_list['internal_hatchery2']
+        rate += 10 * self.research_list['internal_hatchery3']
+        rate += 25 * self.research_list['internal_hatchery4']
+        rate += 5 * self.research_list['internal_hatchery5']
+        rate += 50 * self.research_list['neural_linking']
+
+        rate *= 1 + 0.05 * self.epic_research_list['epic_internal_incubators']
+        self.internal_hatchery_rate = int(rate)
+
+    def add_egg_value(self):
+
+        def get_current_egg_value(egg_name):
+            for egg in eggs:
+                if egg[0] == egg_name:
+                    return egg[1]
+
+        value = 1
+        value *= 1 + 0.25 * self.research_list['nutritional_sup']
+        value *= 1 + 0.25 * self.research_list['padded_packaging']
+        value *= 2 ** self.research_list['bigger_eggs']
+        value *= 3 ** self.research_list['usde_prime']
+        value *= 1 + 0.25 * self.research_list['superfeed']
+        value *= 1 + 0.15 * self.research_list['improved_genetics']
+        value *= 1 + 0.15 * self.research_list['shell_fortification']
+        value *= 2 ** self.research_list['even_bigger_eggs']
+        value *= 1 + 0.1 * self.research_list['genetic_purification']
+        value *= 2 ** self.research_list['graviton_coating']
+        value *= 1 + 0.25 * self.research_list['chrystal_shells']
+        value *= 1 + 0.25 * self.research_list['telepathic_will']
+        value *= 1 + 0.10 * self.research_list['atomic_purification']
+        value *= 10 ** self.research_list['multi_layering']
+        value *= 1 + 0.05 * self.research_list['eggsistor']
+        value *= 1 + 0.01 * self.research_list['matter_reconfig']
+        value *= 10 ** self.research_list['timeline_splicing']
+
+        #value *= 1 + 0.10 * self.epic_research_list['epic_clucking']
+
+        value *= get_current_egg_value(self.current_egg)
+        self.egg_value = self.transform_number(value, just_transform=True)
+
+    def add_egg_laying_rate(self):
+        rate = 2
+        rate *= 1 + 0.10 * self.research_list['comfy_nests']
+        rate *= 1 + 0.05 * self.research_list['hen_house_ac']
+        rate *= 1 + 0.15 * self.research_list['improved_genetics']
+        rate *= 1 + 0.10 * self.research_list['time_compress']
+        rate *= 1 + 0.02 * self.research_list['timeline_diversion']
+        rate *= 1 + 0.10 * self.research_list['relativity_optimization']
+
+        rate *= 1 + 0.05 * self.epic_research_list['epic_egg_laying']
+        rate *= self.farm_population[0]
+        self.egg_laying_rate = self.transform_number(rate, just_transform=True)
+
     def print_(self):
         print("user_id:", self.user_id)
         print("username:", self.username)
@@ -299,6 +364,11 @@ class Profile():
         print("epic research:", self.epic_research_list)
         print("research:", self.research_list)
         print("boosts:", self.boost_list)
+        print("bonus per soul egg:", self.bonus_per_soul_egg)
+        print("earnings bonus", self.earnings_bonus)
+        print("internal hatchery rate:", self.internal_hatchery_rate)
+        print("egg value:", self.egg_value)
+        print("egg laying rate:", self.egg_laying_rate)
 
 if __name__ == '__main__':
     
@@ -369,5 +439,10 @@ if __name__ == '__main__':
                 if "<message>_18_" in attr2:
                     profile.add_research(json_object[json_main][attr][attr2])
         counter += 1
+    profile.add_bonus_per_soul_egg()
+    profile.add_earnings_bonus()
+    profile.add_internal_hatchery_rate()
+    profile.add_egg_value()
+    profile.add_egg_laying_rate()
 
     profile.print_()

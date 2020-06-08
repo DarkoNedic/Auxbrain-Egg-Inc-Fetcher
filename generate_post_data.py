@@ -34,8 +34,6 @@ def run(DST=os.getcwd() + "/post_data_base64.out", PB_DST = os.getcwd() + "/post
             else:
                 #print("Invalid path. Will write to:", DST)
                 pass
-    else:
-        USER_ID = "G:195671346"
 
     userdata = post_data_pb2.userdata()
     userdata.user_id = USER_ID

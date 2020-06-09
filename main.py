@@ -142,6 +142,41 @@ epic_research_dictionary = {  # name, max
     "prophecy_bonus": ("Prophecy Bonus", 5),
     "hold_to_research": ("Hold to Research", 8)}
 
+habitats = {  # index: name, capacity
+    0: ["Coop", 250],
+    1: ["Shack", 500],
+    2: ["Super Shack", 1000],
+    3: ["Short House", 2000],
+    4: ["The Standard", 5000],
+    5: ["Long House", 10000],
+    6: ["Double Decker", 20000],
+    7: ["Warehouse", 50000],
+    8: ["Center", 100000],
+    9: ["Bunker", 200000],
+    10: ["Eggkea", 500000],
+    11: ["HAB 1000", 1000000],
+    12: ["Hangar", 2000000],
+    13: ["Tower", 5000000],
+    14: ["HAB 10,000", 10000000],
+    15: ["Eggtopia", 25000000],
+    16: ["Monolith", 50000000],
+    17: ["Planet Portal", 100000000],
+    18: ["Chicken Universe", 600000000]}
+
+vehicles = {  # index: name, capacity
+    0: ["Trike", 5000],
+    1: ["Transit", 15000],
+    2: ["Pickup", 50000],
+    3: ["10 Foot", 100000],
+    4: ["24 Foot", 250000],
+    5: ["Semi", 500000],
+    6: ["Double Semi", 1000000],
+    7: ["Future Semi", 5000000],
+    8: ["Mega Semi", 15000000],
+    9: ["Hover Semi", 30000000],
+    10: ["Quantum Transporter", 50000000],
+    11: ["Hyperloop Train", 50000000]}
+
 class Profile():
 
     # population @ <varint>_6_815
@@ -281,6 +316,33 @@ class Profile():
     def add_farm_population(self, farm_population):
         self.farm_population = self.transform_number(int(farm_population), just_transform=True)
 
+
+    def add_habs(self, hab_index):
+        try:
+            self.habitats_list
+        except AttributeError:
+            self.habitats_list = OrderedDict()
+        self.habitats_list[len(self.habitats_list)] = [int(hab_index)]
+
+    def add_habs_filling(self, filling_level):
+        for hab in self.habitats_list:
+            if len(self.habitats_list[hab]) == 1:
+                self.habitats_list[hab] += [int(filling_level)]
+                return
+
+    def add_vehicle(self, vehicle_index):
+        try:
+            self.vehicle_list
+        except AttributeError:
+            self.vehicle_list = OrderedDict()
+        self.vehicle_list[len(self.vehicle_list)] = [int(vehicle_index)]
+
+    def add_hyperloop_cars(self, hyperloop_cars):
+        for car in self.vehicle_list:
+            if self.vehicle_list[car] == [11] and len(self.vehicle_list[car]) == 1:
+                self.vehicle_list[car] += [int(hyperloop_cars)]
+                return
+
     def add_bonus_per_soul_egg(self):
         prophecy_bonus = (1.0 + 0.05 + 0.01 * self.epic_research_list['prophecy_bonus'])
         soul_eggs_bonus = (10 + self.epic_research_list['soul_eggs'])
@@ -369,6 +431,8 @@ class Profile():
         print("internal hatchery rate:", self.internal_hatchery_rate)
         print("egg value:", self.egg_value)
         print("egg laying rate:", self.egg_laying_rate)
+        print("habitats:", self.habitats_list)
+        print("vehicles:", self.vehicle_list)
 
 if __name__ == '__main__':
     
@@ -436,6 +500,14 @@ if __name__ == '__main__':
                     profile.add_prestige_earnings(json_object[json_main][attr][attr2])
                 if "<varint>_6_" in attr2:
                     profile.add_farm_population(json_object[json_main][attr][attr2])
+                if "<varint>_12_" in attr2:
+                    profile.add_habs(json_object[json_main][attr][attr2])
+                if "<varint>_13_" in attr2:
+                    profile.add_habs_filling(json_object[json_main][attr][attr2])
+                if "<varint>_17_" in attr2:
+                    profile.add_vehicle(json_object[json_main][attr][attr2])
+                if "<varint>_21_" in attr2:
+                    profile.add_hyperloop_cars(json_object[json_main][attr][attr2])
                 if "<message>_18_" in attr2:
                     profile.add_research(json_object[json_main][attr][attr2])
         counter += 1
